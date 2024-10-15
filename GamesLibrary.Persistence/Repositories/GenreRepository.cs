@@ -16,7 +16,7 @@ namespace GamesLibrary.Persistence.Repositories
 
         public async Task<IEnumerable<Genre>> GetGenresByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellation)
         {
-            return await _context.Genres.Where(genre => ids.Contains(genre.Id)).ToListAsync(cancellation);
+            return await _context.Genres.AsNoTracking().Where(genre => ids.Contains(genre.Id)).ToListAsync(cancellation);
         }
     }
 }

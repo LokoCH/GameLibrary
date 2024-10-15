@@ -24,6 +24,7 @@ namespace GamesLibrary.Application.Features.Games.Queries.GetAllGames
 
         public async Task<Result<IEnumerable<GetAllGamesDTO>>> Handle(GetAllGamesQuery request, CancellationToken cancellationToken)
         {
+            IEnumerable<GetAllGamesDTO> result = [];
             IEnumerable<Game>? games;
 
             if (request.isFullInfo is not null && request.isFullInfo == true)
@@ -37,20 +38,16 @@ namespace GamesLibrary.Application.Features.Games.Queries.GetAllGames
                 games = await _gameGenericRepository.GetAllAsync(cancellationToken);
             }
 
-            if (games is null || !games.Any())
+            if (games is not null && games.Any())
             {
-                string message = "Данные не найдены";
-                _logger.LogWarning(message);
-                return Result.Failure<IEnumerable<GetAllGamesDTO>>(message);
+                result = games.Select(game => new GetAllGamesDTO()
+                {
+                    Id = game.Id,
+                    Name = game.Name,
+                    Creater = game.Creater is null ? null : new GetAllGamesCreaterDTO { Id = game.Creater.Id, Name = game.Creater.Name },
+                    Genres = game.Genres is null ? null : game.Genres.Select(genre => new GetAllGamesGenreDTO { Id = genre.Id, Name = genre.Name })
+                });
             }
-
-            IEnumerable<GetAllGamesDTO> result = games.Select(game => new GetAllGamesDTO()
-            {
-                Id = game.Id,
-                Name = game.Name,
-                Creater = game.Creater is null ? null : new GetAllGamesCreaterDTO { Id = game.Creater.Id, Name = game.Creater.Name },
-                Genres = game.Genres is null ? null : game.Genres.Select(genre => new GetAllGamesGenreDTO { Id = genre.Id, Name = genre.Name })
-            });
 
             _logger.LogInformation($"Ответ: {JsonSerializer.Serialize(result)}");
 

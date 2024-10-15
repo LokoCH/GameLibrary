@@ -23,20 +23,18 @@ namespace GamesLibrary.Application.Features.Genres.Queries.GetAllGenres
         public async Task<Result<IEnumerable<GetAllGenresDTO>>> Handle(GetAllGenresQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Поступил запрос на информацию о всех жанрах");
+
+            IEnumerable<GetAllGenresDTO> result = [];
             IEnumerable<Genre>? genres = await _genreGenericRepository.GetAllAsync(cancellationToken);
 
-            if (genres is null || !genres.Any())
+            if (genres is not null && genres.Any())
             {
-                string message = "Данные не найдены";
-                _logger.LogWarning(message);
-                return Result.Failure<IEnumerable<GetAllGenresDTO>>(message);
+                result = genres.Select(game => new GetAllGenresDTO()
+                {
+                    Id = game.Id,
+                    Name = game.Name,
+                });
             }
-
-            IEnumerable<GetAllGenresDTO> result = genres.Select(game => new GetAllGenresDTO()
-            {
-                Id = game.Id,
-                Name = game.Name,
-            });
 
             _logger.LogInformation($"Ответ: {JsonSerializer.Serialize(result)}");
 

@@ -1,5 +1,6 @@
 ﻿using GamesLibrary.Application.Repositories;
 using GamesLibrary.Domain.Abstractions;
+using GamesLibrary.Domain.Entities;
 using GamesLibrary.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 

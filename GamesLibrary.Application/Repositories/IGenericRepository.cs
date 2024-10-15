@@ -1,4 +1,5 @@
 ﻿using GamesLibrary.Domain.Abstractions;
+using GamesLibrary.Domain.Entities;
 
 namespace GamesLibrary.Application.Repositories
 {

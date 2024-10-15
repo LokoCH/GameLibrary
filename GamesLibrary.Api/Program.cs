@@ -2,6 +2,7 @@
 using GamesLibrary.Persistence.Extentions;
 using GamesLibrary.Application.Extentions;
 using GamesLibrary.Api.Middlewares.Exceptions;
+using System.Text.Json;
 
 namespace GamesLibrary.Api
 {
@@ -11,7 +12,13 @@ namespace GamesLibrary.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().
+                AddJsonOptions(jsonOptions =>
+                {
+                    jsonOptions.JsonSerializerOptions.WriteIndented = true;
+                    jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                });
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 

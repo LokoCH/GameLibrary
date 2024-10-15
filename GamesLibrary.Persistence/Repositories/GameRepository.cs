@@ -44,5 +44,25 @@ namespace GamesLibrary.Persistence.Repositories
 
             return games;
         }
+
+        public async Task<Game?> UpdateManyToMany(Game game, CancellationToken cancellationToken)
+        {
+            var oldGame = await _context.Games
+                .Include(game => game.Genres)
+                .FirstOrDefaultAsync(game => game.Id == game.Id, cancellationToken);
+
+            if (oldGame is null) return null;
+
+            var genres = await _context.Genres.Where(genre => game.Genres.Select(g => g.Id).Contains(genre.Id)).ToListAsync(cancellationToken);
+
+            oldGame.Name = game.Name;
+            oldGame.CreaterId = game.CreaterId;
+            oldGame.Genres = genres;
+
+            var count = await _context.SaveChangesAsync(cancellationToken);
+            if(count > 0) return oldGame;
+
+            return null;
+        }
     }
 }

@@ -23,23 +23,19 @@ namespace GamesLibrary.Application.Features.Creaters.Queries.GetAllCreaters
         public async Task<Result<IEnumerable<GetAllCreatersDTO>>> Handle(GetAllCreatersQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Запрос на информацию о всех студиях");
+            IEnumerable<GetAllCreatersDTO> result = [];
             IEnumerable<Creater>? creaters = await _createrGenericRepository.GetAllAsync(cancellationToken);
 
-            if (creaters is null || !creaters.Any())
+            if (creaters is not null && creaters.Any())
             {
-                string message = "Данные не найдены";
-                _logger.LogWarning(message);
-                return Result.Failure<IEnumerable<GetAllCreatersDTO>>(message);
+                result = creaters.Select(creater => new GetAllCreatersDTO()
+                {
+                    Id = creater.Id,
+                    Name = creater.Name
+                });
             }
 
-            IEnumerable<GetAllCreatersDTO> result = creaters.Select(creater => new GetAllCreatersDTO()
-            {
-                Id = creater.Id,
-                Name = creater.Name
-            });
-
             _logger.LogInformation($"Ответ: {JsonSerializer.Serialize(result)}");
-
             return Result.Success(result);
         }
     }

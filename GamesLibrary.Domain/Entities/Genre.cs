@@ -11,7 +11,7 @@ namespace GamesLibrary.Domain.Entities
         [StringLength(GenreConstants.MAX_LENGTH_NAME, ErrorMessage = "Название не может быть длиннее {1}")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonIgnore]
         public IEnumerable<Game> Games { get; set; } = new List<Game>();
+
     }
 }

@@ -7,13 +7,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GamesLibrary.Application.Features.Creaters.Commands.UpdateCreater
 {
-    public record UpdateCreaterCommand : IRequest<Result<UpdateCreaterVM>>
+    public record UpdateCreaterCommand : IRequest<Result<UpdateCreaterDTO>>
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
 
-    public class UpdateCreaterCommandHandler : IRequestHandler<UpdateCreaterCommand, Result<UpdateCreaterVM>>
+    public class UpdateCreaterCommandHandler : IRequestHandler<UpdateCreaterCommand, Result<UpdateCreaterDTO>>
     {
         private readonly IGenericRepository<Creater> _createrGenericRepository;
         private readonly ILogger _logger;
@@ -24,7 +24,7 @@ namespace GamesLibrary.Application.Features.Creaters.Commands.UpdateCreater
             _logger = logger;
         }
 
-        public async Task<Result<UpdateCreaterVM>> Handle(UpdateCreaterCommand request, CancellationToken cancellationToken)
+        public async Task<Result<UpdateCreaterDTO>> Handle(UpdateCreaterCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Запрос на обновление студии с ID = {request.Id}");
             Creater? oldCreater = await _createrGenericRepository.GetByIdAsync(request.Id, cancellationToken);
@@ -33,33 +33,26 @@ namespace GamesLibrary.Application.Features.Creaters.Commands.UpdateCreater
             {
                 string message = $"Не удалось найти студию с ID = {request.Id}";
                 _logger.LogWarning(message);
-                return Result.Failure<UpdateCreaterVM>(message);
+                return Result.Failure<UpdateCreaterDTO>(message);
             }
 
-            Creater newCreater = new Creater { Id = request.Id, Name = request.Name };
+            oldCreater.Id = request.Id;
+            oldCreater.Name = request.Name;
 
             var validateResults = new List<ValidationResult>();
-            if (Validator.TryValidateObject(newCreater, new ValidationContext(newCreater), validateResults))
+            if (!Validator.TryValidateObject(oldCreater, new ValidationContext(oldCreater), validateResults))
             {
                 string error = validateResults.First().ErrorMessage!;
                 _logger.LogWarning($"Не пройдена валидация: {error}");
-                return Result.Failure<UpdateCreaterVM>(error);
+                return Result.Failure<UpdateCreaterDTO>(error);
             }
 
-            await _createrGenericRepository.UpdateAsync(newCreater, cancellationToken);
+            await _createrGenericRepository.UpdateAsync(oldCreater, cancellationToken);
 
-            UpdateCreaterVM updateCreaterVm = new UpdateCreaterVM
+            UpdateCreaterDTO updateCreaterVm = new UpdateCreaterDTO
             {
-                OldCreater = new UpdateCreaterDTO
-                {
-                    Id = oldCreater.Id,
-                    Name = oldCreater.Name
-                },
-                NewCreater = new UpdateCreaterDTO
-                {
-                    Id = newCreater.Id,
-                    Name = newCreater.Name
-                }
+                Id = oldCreater.Id,
+                Name = oldCreater.Name
             };
             _logger.LogInformation($"Обновление завершено {updateCreaterVm}");
             return updateCreaterVm;

@@ -7,13 +7,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GamesLibrary.Application.Features.Genres.Commands.UpdateGenre
 {
-    public record UpdateGenreCommand : IRequest<Result<UpdateGenreVM>>
+    public record UpdateGenreCommand : IRequest<Result<UpdateGenreDTO>>
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
 
-    public class UpdateGenreCommandHandler : IRequestHandler<UpdateGenreCommand, Result<UpdateGenreVM>>
+    public class UpdateGenreCommandHandler : IRequestHandler<UpdateGenreCommand, Result<UpdateGenreDTO>>
     {
         private readonly IGenericRepository<Genre> _genreGenericRepository;
         private readonly ILogger _logger;
@@ -24,7 +24,7 @@ namespace GamesLibrary.Application.Features.Genres.Commands.UpdateGenre
             _logger = logger;
         }
 
-        public async Task<Result<UpdateGenreVM>> Handle(UpdateGenreCommand request, CancellationToken cancellationToken)
+        public async Task<Result<UpdateGenreDTO>> Handle(UpdateGenreCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Запрос на обновление игры с ID = {request.Id}");
             Genre? oldGenre = await _genreGenericRepository.GetByIdAsync(request.Id, cancellationToken);
@@ -33,33 +33,26 @@ namespace GamesLibrary.Application.Features.Genres.Commands.UpdateGenre
             {
                 string message = $"Не удалось найти жанр с ID = {request.Id}";
                 _logger.LogWarning(message);
-                return Result.Failure<UpdateGenreVM>(message);
+                return Result.Failure<UpdateGenreDTO>(message);
             }
 
-            Genre newGenre = new Genre { Id = request.Id, Name = request.Name };
+            oldGenre.Id = request.Id;
+            oldGenre.Name = request.Name;
 
             var validateResults = new List<ValidationResult>();
-            if (Validator.TryValidateObject(newGenre, new ValidationContext(newGenre), validateResults))
+            if (!Validator.TryValidateObject(oldGenre, new ValidationContext(oldGenre), validateResults))
             {
                 string error = validateResults.First().ErrorMessage!;
                 _logger.LogWarning($"Не пройдена валижация: {error}");
-                return Result.Failure<UpdateGenreVM>(error);
+                return Result.Failure<UpdateGenreDTO>(error);
             }
 
-            await _genreGenericRepository.UpdateAsync(newGenre, cancellationToken);
+            await _genreGenericRepository.UpdateAsync(oldGenre, cancellationToken);
 
-            UpdateGenreVM updateGameVm = new UpdateGenreVM
+            UpdateGenreDTO updateGameVm = new UpdateGenreDTO
             {
-                OldGenre = new UpdateGenreDTO
-                {
-                    Id = oldGenre.Id,
-                    Name = oldGenre.Name,
-                },
-                NewGenre = new UpdateGenreDTO
-                {
-                    Id = newGenre.Id,
-                    Name = newGenre.Name,
-                }
+                Id = oldGenre.Id,
+                Name = oldGenre.Name,
             };
             _logger.LogInformation($"Обновление завершено {updateGameVm}");
             return updateGameVm;

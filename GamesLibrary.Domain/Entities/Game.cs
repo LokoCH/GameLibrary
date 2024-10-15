@@ -12,8 +12,8 @@ namespace GamesLibrary.Domain.Entities
 
         [Required]
         public Guid CreaterId { get;set; }
-
         public Creater Creater { get; set; } = null!;
+
         public IEnumerable<Genre> Genres { get; set; } = new List<Genre>();
        
     }

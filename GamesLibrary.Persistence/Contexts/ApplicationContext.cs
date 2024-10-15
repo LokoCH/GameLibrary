@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GamesLibrary.Persistence.Contexts
 {
-    public class ApplicationContext : DbContext
+    public partial class ApplicationContext : DbContext
     {
         public ApplicationContext(DbContextOptions options) : base(options)
         {
+           // Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 
